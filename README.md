@@ -1,4 +1,4 @@
-Bare-metal kernel
+nandboot
 ======
 
-Bare-metal code for fun
+First stage bootloader before u-boot

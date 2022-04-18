@@ -1,13 +1,14 @@
-	.text
-
 	.extern main
 	.extern __stack_end__
 	.extern __bss_start__
 	.extern __bss_end__
 
 	.globl _entry
-	.set noreorder
 
+	.section .header, "axR"
+_header:
+	// 8-bit, 3-page cycle
+	.word	0xffffffff
 _entry:
 	// Clear bss
 	la	$8, __bss_start__
@@ -22,5 +23,4 @@ _bss:
 	la	$29, __stack_end__
 	j	main
 	nop
-
-	.set reorder
+	.size   _header, .-_header

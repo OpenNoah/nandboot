@@ -9,9 +9,9 @@ typedef struct {
 	_IO uint32_t TCSR;
 } hw_wdt_t;
 
-void wdt_reset(hw_uart_t *uart)
+void wdt_reset(void)
 {
-	uart_puts(uart, "\r\nReset using WDT\r\n\r\n");
+	uart_puts("\r\nWDT reset\r\n\r\n");
 	hw_wdt_t *wdt = WDT_BASE;
 	wdt->TCSR = 1;	// PCLK as clock input
 	wdt->TDR = 0;	// Reset on timer = 0

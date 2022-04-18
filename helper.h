@@ -4,6 +4,8 @@
 
 #define PA_TO_KSEG1(v)	(0xa0000000 + (v))
 
+#define DIV_CEIL(a, b)	(((a) + (b) - 1) / (b))
+
 const char *get_hex_u32(const char *s, uint32_t *pv);
 
 static inline uint32_t kseg0_to_pa(const void *p)

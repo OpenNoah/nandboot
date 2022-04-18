@@ -1,19 +1,27 @@
 /* Specify the memory areas */
 MEMORY
 {
-	RAM(xrw):    ORIGIN = 0x81000000, LENGTH = 0x01000000
-	DMARAM(xrw): ORIGIN = 0xa3000000, LENGTH = 0x01000000
+  /* The boot rom only loads up to 8k from NAND */
+  LOAD(xrw):  ORIGIN = 0x80000000, LENGTH = 0x2000
+  RAM(xrw):   ORIGIN = 0x80002000, LENGTH = 0x2000
 }
+
+/* Stack starts from the end of available RAMs */
+__stack_end__ = ORIGIN(RAM) + LENGTH(RAM);
 
 /* Entry Point */
 ENTRY(_entry)
 
-__stack_size__ = 16 * 1024;
-__heap_size__  = 16 * 1024;
-
 /* Define output sections */
 SECTIONS
 {
+  /* Header for bootrom to identify NAND type and entry */
+  .header :
+  {
+    . = ALIGN(4);
+    KEEP(*(.header))
+  } >LOAD
+
   /* The program code and other data goes into TEXT */
   .text :
   {
@@ -26,10 +34,8 @@ SECTIONS
 
     KEEP(*(.init))
     KEEP(*(.fini))
-
-    . = ALIGN(4);
     _etext = .;        /* define a global symbols at end of code */
-  } >RAM
+  } >LOAD
 
   /* Constant data goes into TEXT */
   .rodata :
@@ -37,36 +43,32 @@ SECTIONS
     . = ALIGN(4);
     *(.rodata)         /* .rodata sections (constants, strings, etc.) */
     *(.rodata*)        /* .rodata* sections (constants, strings, etc.) */
+  } >LOAD
 
-    . = ALIGN(4);
-  } >RAM
-
+  . = ALIGN(4);
   .preinit_array     :
   {
     PROVIDE_HIDDEN (__preinit_array_start = .);
     KEEP(*(.preinit_array*))
     PROVIDE_HIDDEN (__preinit_array_end = .);
-  } >RAM
+  } >LOAD
   .init_array :
   {
     PROVIDE_HIDDEN (__init_array_start = .);
     KEEP(*(SORT(.init_array.*)))
     KEEP(*(.init_array*))
     PROVIDE_HIDDEN (__init_array_end = .);
-  } >RAM
+  } >LOAD
   .fini_array :
   {
     PROVIDE_HIDDEN (__fini_array_start = .);
     KEEP(*(SORT(.fini_array.*)))
     KEEP(*(.fini_array*))
     PROVIDE_HIDDEN (__fini_array_end = .);
-  } >RAM
+  } >LOAD
 
   /* Initialized data sections goes into RAM, load LMA copy after code */
   . = ALIGN(4);
-  /* used by the startup to initialize data */
-  __data_load__ = LOADADDR(.data);
-
   .data :
   {
     __data_start__ = .;
@@ -79,7 +81,7 @@ SECTIONS
 
     . = ALIGN(4);
     __data_end__ = .;
-  } >RAM
+  } >LOAD AT>LOAD
 
   /* Uninitialized data section */
   . = ALIGN(4);
@@ -94,38 +96,6 @@ SECTIONS
     . = ALIGN(4);
     __bss_end__ = .;
   } >RAM
-
-  /* Heap section */
-  . = ALIGN(4);
-  .heap (NOLOAD) :
-  {
-    . = ALIGN(4);
-    __stack_start__ = .;
-    /* Reserve space */
-    . += __stack_size__;
-    . = ALIGN(4);
-    __stack_end__ = .;
-  } >RAM
-
-  /* Heap section */
-  . = ALIGN(4);
-  .heap (NOLOAD) :
-  {
-    . = ALIGN(4);
-    __heap_start__ = .;
-    /* Reserve space */
-    . += __heap_size__;
-    . = ALIGN(4);
-    __heap_end__ = .;
-  } >RAM
-
-  /* Special uncached DMA ram */
-  .dma (NOLOAD):
-  {
-    . = ALIGN(16);
-    *(.dma)
-    *(.dma*)
-  } >DMARAM
 
   /* Remove information from the standard libraries */
   /DISCARD/ :
