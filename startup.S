@@ -3,12 +3,16 @@
 	.extern __bss_start__
 	.extern __bss_end__
 
+	.global _header
 	.globl _entry
 
 	.section .header, "axR"
 _header:
 	// 8-bit, 3-page cycle
-	.word	0xffffffff
+	.byte	0xff
+	.byte	VERSION
+	.byte	VARIANT >> 8
+	.byte	VARIANT & 0xff
 _entry:
 	// Clear bss
 	la	$8, __bss_start__

@@ -1,8 +1,9 @@
-SRC	:= main.c uart.c wdt.c helper.c keypad.c gpio.c pll.c sdram.c
-SRC	+= startup.S
-NAME	= nandboot
+VARIANT	?= 1501
+VERSION	:= 0
+NAME	:= nandboot_np$(VARIANT)
 
-TYPE	?= np1501
+SRC	:= main.c uart.c wdt.c helper.c keypad.c gpio.c pll.c sdram.c nand.c
+SRC	+= startup.S
 
 OBJ	= $(patsubst %.S,%.o,$(SRC:%.c=%.o))
 
@@ -16,8 +17,9 @@ SIZE	:= $(CROSS)size
 OBJCOPY	:= $(CROSS)objcopy
 
 ARGS	= -mips1 -g -O3 -mno-abicalls -fno-pic -fno-pie -nostdlib
-CFLAGS	= $(ARGS) -D$(TYPE)
-ASFLAGS	= $(ARGS) -D$(TYPE)
+DEFS	= -DVARIANT=0x$(VARIANT) -DVERSION=$(VERSION)
+CFLAGS	= $(ARGS) $(DEFS)
+ASFLAGS	= $(ARGS) $(DEFS)
 LDFLAGS	= $(ARGS) -Xlinker --gc-sections -T nandboot.ld
 
 .DELETE_ON_ERROR:

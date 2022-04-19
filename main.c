@@ -3,9 +3,17 @@
 #include "uart.h"
 #include "wdt.h"
 #include "pll.h"
+#include "lcd.h"
 #include "sdram.h"
+#include "nand.h"
 #include "keypad.h"
 #include "helper.h"
+
+extern struct {
+	uint8_t nandtype;
+	uint8_t version;
+	uint8_t variant_h, variant_l;
+} _header;
 
 static void mem_read_line(const char *line)
 {
@@ -62,18 +70,22 @@ static void mem_fill_line(const char *line)
 	uart_puts("\r\n");
 }
 
-extern unsigned short quot1[3];
+#define NAND_BANK	0xb8000000
 
 int main()
 {
 	pll_init();
 	gpio_init();
 	uart_init();
-	uart_puts("\r\n*** nandboot start ***\r\n");
+	uart_puts("\r\n*** nandboot start np");
+	uart_puthex((_header.variant_h << 8) | _header.variant_l, 4);
+	uart_puts(" ***\r\n");
 	pll_switch();
 	sdram_init();
+	nand_init();
 
 	uart_puts("Ready.\r\n");
+	nand_print_id();
 
 	for (;;) {
 		uart_puts("> ");
