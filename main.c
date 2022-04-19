@@ -67,19 +67,15 @@ extern unsigned short quot1[3];
 int main()
 {
 	pll_init();
-
 	gpio_init();
-
 	uart_init();
 	uart_puts("\r\n*** nandboot start ***\r\n");
-
 	pll_switch();
-	uart_puts("PLL stable\r\n");
-
 	sdram_init();
 
+	uart_puts("Ready.\r\n");
+
 	for (;;) {
-		sdram_print();
 		uart_puts("> ");
 		char *line = uart_get_line();
 		if (line[0] == 0)

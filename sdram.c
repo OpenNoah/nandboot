@@ -118,18 +118,3 @@ void sdram_init(void)
 	sdram->DMAR = 0x000020f8;
 	*BCR = (1 << 1);
 }
-
-void sdram_print(void)
-{
-	uint32_t csr = sdram->RTCSR;
-	uint32_t cor = sdram->RTCOR;
-	uint32_t cnt = sdram->RTCNT;
-	uart_puthex((uint32_t)&sdram->SDMR[0], 8);
-	uart_puts(", ");
-	uart_puthex(csr, 2);
-	uart_puts(", ");
-	uart_puthex(cor, 2);
-	uart_puts(", ");
-	uart_puthex(cnt, 2);
-	uart_puts("\r\n");
-}
