@@ -1,6 +1,9 @@
 #pragma once
 
-#if VARIANT == 0x1501
+#if VARIANT == 0x1500
+#define SDRAM_HY57V561620FTP_H
+#define NAND_HY27UU08AG5M
+#elif VARIANT == 0x1501
 #define SDRAM_HY57V561620FTP_H
 #define NAND_K9GAG08U0M
 #else
@@ -74,6 +77,16 @@ static const struct config_t config = {
 		.block = 512 * 1024,
 		.page = 4 * 1024,
 		.oob = 16 * 2 * 4,
+#elif defined(NAND_HY27UU08AG5M)
+		.bank = 1,
+		.block = 256 * 1024,
+		.page = 2 * 1024,
+		.oob = 64,
 #endif
 	}
 };
+
+static const void *sdram_base = (void *)PA_TO_KSEG0(0);
+static const uint32_t sdram_size = (4 / (1 + config.sdram.bw16)) *
+	(1 << (config.sdram.nrow + config.sdram.ncol)) *
+	(2 * (1 + config.sdram.bank4));

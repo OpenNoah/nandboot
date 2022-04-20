@@ -9,11 +9,15 @@
 #include "keypad.h"
 #include "helper.h"
 
+#define BUFFER_SIZE	(16 * 1024 * 1024)
+
 extern struct {
 	uint8_t nandtype;
 	uint8_t version;
 	uint8_t variant_h, variant_l;
 } _header;
+
+static void *buf;
 
 static void mem_read_line(const char *line)
 {
@@ -70,6 +74,19 @@ static void mem_fill_line(const char *line)
 	uart_puts("\r\n");
 }
 
+static void mem_dump_nand(const char *line, void *buf)
+{
+	uint32_t addr = 0;
+	line = get_hex_u32(&line[2], &addr);
+	if (*line++ == '\0')
+		return;
+	uint32_t len = 0;
+	get_hex_u32(line, &len);
+	if (len > BUFFER_SIZE)
+		len = BUFFER_SIZE;
+	nand_dump(buf, addr, len);
+}
+
 #define NAND_BANK	0xb8000000
 
 int main()
@@ -86,6 +103,7 @@ int main()
 
 	uart_puts("Ready.\r\n");
 	nand_print_id();
+	buf = alloc(BUFFER_SIZE);
 
 	for (;;) {
 		uart_puts("> ");
@@ -94,6 +112,9 @@ int main()
 			continue;
 
 		switch (line[0]) {
+		case 'n':
+			mem_dump_nand(line, buf);
+			break;
 		case 'r':
 			mem_read_line(line);
 			break;

@@ -1,5 +1,7 @@
 #include "helper.h"
 
+extern char __stack_end__;
+
 const char *get_hex_u32(const char *s, uint32_t *pv)
 {
 	uint32_t v = 0;
@@ -21,4 +23,12 @@ const char *get_hex_u32(const char *s, uint32_t *pv)
 	}
 	*pv = v;
 	return s;
+}
+
+void *alloc(uint32_t size)
+{
+	static uint32_t ptr = (uint32_t)&__stack_end__;
+	void *p = (void *)ptr;
+	ptr += size;
+	return p;
 }
