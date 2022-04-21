@@ -1,11 +1,23 @@
 #pragma once
 
+#define BIT(n)	(1ul << (n))
+
+#include "drm_mode.h"
+#include "drm_connector.h"
+#include "media-bus-format.h"
+
 #if VARIANT == 0x1500
 #define SDRAM_HY57V561620FTP_H
 #define NAND_HY27UU08AG5M
+#define LCD_PT035TN01
 #elif VARIANT == 0x1501
 #define SDRAM_HY57V561620FTP_H
 #define NAND_K9GAG08U0M
+#define LCD_PT035TN01
+#elif VARIANT == 0x2150
+#define SDRAM_HY57V561620FTP_H
+#define NAND_K9GAG08U0M
+#define LCD_AT043TN24
 #else
 #error Unknown board variant
 #endif
@@ -13,7 +25,8 @@
 #define MHZ(n)		((n) * 1000000)
 
 #define SYS_CLK_RATE	MHZ(336)
-#define SDRAM_CLK_RATE	MHZ(112)
+#define SDRAM_CLK_RATE	(SYS_CLK_RATE / 3)	// Max. 133MHz
+#define LCD_CLK_RATE	(SYS_CLK_RATE / 3)	// Max. 150MHz
 #define EXT_CLK_RATE	MHZ(12)
 #define BAUDRATE	115200
 
@@ -46,9 +59,25 @@ struct nand_config_t {
 	unsigned oob;	// OOB bytes per page
 };
 
+struct lcd_config_t {
+	unsigned clock;
+	unsigned hdisplay;
+	unsigned hsync_start;
+	unsigned hsync_end;
+	unsigned htotal;
+	unsigned vdisplay;
+	unsigned vsync_start;
+	unsigned vsync_end;
+	unsigned vtotal;
+	unsigned flags;
+	unsigned bus_format;
+	unsigned bus_flags;
+};
+
 struct config_t {
 	struct sdram_config_t sdram;
 	struct nand_config_t nand;
+	struct lcd_config_t lcd;
 };
 
 static const struct config_t config = {
@@ -83,7 +112,36 @@ static const struct config_t config = {
 		.page = 2 * 1024,
 		.oob = 64,
 #endif
-	}
+	},
+	.lcd = {
+#ifdef LCD_PT035TN01
+		.clock = 6035,
+		.hdisplay = 320,
+		.hsync_start = 320 + 10,
+		.hsync_end = 320 + 10 + 1,
+		.htotal = 320 + 10 + 1 + 50,
+		.vdisplay = 240,
+		.vsync_start = 240 + 10,
+		.vsync_end = 240 + 10 + 1,
+		.vtotal = 240 + 10 + 1 + 14,
+		.flags = DRM_MODE_FLAG_NHSYNC | DRM_MODE_FLAG_NVSYNC,
+		.bus_format = MEDIA_BUS_FMT_RGB888_3X8,
+		.bus_flags = DRM_BUS_FLAG_DE_HIGH | DRM_BUS_FLAG_PIXDATA_DRIVE_NEGEDGE,
+#elif defined(LCD_AT043TN24)
+		.clock = 9000,
+		.hdisplay = 480,
+		.hsync_start = 480 + 2,
+		.hsync_end = 480 + 2 + 41,
+		.htotal = 480 + 2 + 41 + 2,
+		.vdisplay = 272,
+		.vsync_start = 272 + 2,
+		.vsync_end = 272 + 2 + 10,
+		.vtotal = 272 + 2 + 10 + 2,
+		.flags = DRM_MODE_FLAG_NHSYNC | DRM_MODE_FLAG_NVSYNC,
+		.bus_format = MEDIA_BUS_FMT_RGB666_1X18,
+		.bus_flags = DRM_BUS_FLAG_DE_HIGH | DRM_BUS_FLAG_PIXDATA_DRIVE_POSEDGE,
+#endif
+	},
 };
 
 static const void *sdram_base = (void *)PA_TO_KSEG0(0);

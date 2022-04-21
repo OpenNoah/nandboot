@@ -33,10 +33,13 @@ void pll_init(void)
 	static const unsigned long mdiv = DIV_CEIL(SYS_CLK_RATE, SDRAM_CLK_RATE);
 	static const unsigned long hdiv = mdiv;
 	static const unsigned long pdiv = mdiv;
-	static const unsigned long ldiv = 32;
+	static const unsigned long ldiv = 0b0010;	// div by 3
 	cgu->CPCCR = (1 << 30) | (1 << 22) | (1 << 21) | ((ldiv - 1) << 16) |
 		     ((mdiv - 1) << 12) | ((pdiv - 1) << 8) |
 		     ((hdiv - 1) << 4) | ((cdiv - 1) << 0);
+	cgu->LPCDR = DIV_CEIL(LCD_CLK_RATE,
+		((config.lcd.bus_format == MEDIA_BUS_FMT_RGB888_3X8) ? 3 : 1) *
+		config.lcd.clock * 1000 - 1);
 	// UHC clock at 48MHz
 	cgu->UHCCDR = (SYS_CLK_RATE / 48) - 1;
 }

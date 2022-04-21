@@ -1,8 +1,7 @@
-#include "gpio.h"
-
 #include <stdint.h>
-#include "helper.h"
 #include "io.h"
+#include "config.h"
+#include "gpio.h"
 
 #define GPIOA_BASE	((gpio_t *)PA_TO_KSEG1(0x10010000))
 #define GPIOB_BASE	((gpio_t *)PA_TO_KSEG1(0x10010100))
@@ -36,6 +35,34 @@ static gpio_t * const gpd = GPIOD_BASE;
 // NAND busy: PC30: Input, level trigger
 #define GPIOC_PINS_NAND_BUSY	(1 << 30)
 
+#ifdef LCD_PT035TN01
+// LCD: PC0-PC7, PC18-PC20: AF0
+#define LCD_PC_AF0	0x001c00ff
+#elif defined(LCD_AT043TN24)
+// LCD: PC0-PC21: AF0
+#define LCD_PC_AF0	0x003fffff
+#endif
+
+#if (VARIANT == 0x1500) || (VARIANT == 0x1501)
+// LCD: PC21: Output 1
+#define LCD_PC_OUT0	0
+#define LCD_PC_OUT1	(1 << 21)
+// LCD: PD27: Output 1
+#define LCD_PD_OUT0	0
+#define LCD_PD_OUT1	0
+#define LCD_PD_PWM	(1 << 27)
+#elif VARIANT == 0x2150
+// LCD: PC22: Output 0, PC23: Output 1
+#define LCD_PC_OUT0	(1 << 22)
+#define LCD_PC_OUT1	(1 << 23)
+// LCD: PD4, PD27: Output 1
+#define LCD_PD_OUT0	0
+#define LCD_PD_OUT1	(1 << 4)
+#define LCD_PD_PWM	(1 << 27)
+#else
+#error Unknown board variant
+#endif
+
 void gpio_init(void)
 {
 	gpa->FUN.S = GPIOA_PINS_MEMC;
@@ -46,14 +73,28 @@ void gpio_init(void)
 	gpb->SEL.C = GPIOB_PINS_MEMC;
 	gpb->PE.S  = GPIOB_PINS_MEMC;
 
-	gpc->FUN.S = GPIOC_PINS_MEMC;
+	gpc->FUN.S = GPIOC_PINS_MEMC | LCD_PC_AF0;
 	gpc->SEL.S = GPIOC_PINS_NAND_BUSY;
-	gpc->SEL.C = GPIOC_PINS_MEMC;
-	gpc->PE.S  = GPIOC_PINS_MEMC;
+	gpc->SEL.C = GPIOC_PINS_MEMC | LCD_PC_AF0;
+	gpc->PE.S  = GPIOC_PINS_MEMC | LCD_PC_AF0;
+#if (LCD_PC_OUT0 | LCD_PC_OUT1) != 0
+	gpc->DIR.S = LCD_PC_OUT0 | LCD_PC_OUT1;
+#endif
+#if LCD_PC_OUT1 != 0
+	gpc->DAT.S = LCD_PC_OUT1;
+#endif
 
 	gpd->FUN.S = GPIO_PINS_UART0;
 	gpd->SEL.S = GPIO_PINS_UART0;
 	gpd->PE.C  = GPIO_PINS_UART0;
+#if (LCD_PD_OUT0 | LCD_PD_OUT1 | LCD_PD_PWM) != 0
+	gpd->DIR.S = LCD_PD_OUT0 | LCD_PD_OUT1 | LCD_PD_PWM;
+#endif
+#if LCD_PD_OUT1 != 0
+	gpd->DAT.S = LCD_PD_OUT1;
+#endif
+
+	gpio_lcd_enable(0);
 }
 
 int gpio_nand_busy(void)
@@ -79,4 +120,17 @@ void gpio_nand_busy_wait(void)
 
 	// Wait for high level
 	while (!(gpc->FLG.D & GPIOC_PINS_NAND_BUSY));
+}
+
+void gpio_lcd_enable(int en)
+{
+	if (en) {
+#if LCD_PD_PWM != 0
+		gpd->DAT.S = LCD_PD_PWM;
+#endif
+	} else {
+#if LCD_PD_PWM != 0
+		gpd->DAT.C = LCD_PD_PWM;
+#endif
+	}
 }

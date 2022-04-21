@@ -1,8 +1,8 @@
-VARIANT	?= 1501
+VARIANT	?= 2150
 VERSION	:= 0
 NAME	:= nandboot_np$(VARIANT)
 
-SRC	:= main.c uart.c wdt.c helper.c keypad.c gpio.c pll.c sdram.c nand.c
+SRC	:= main.c uart.c wdt.c helper.c keypad.c gpio.c pll.c sdram.c nand.c lcd.c
 SRC	+= startup.S
 
 OBJ	= $(patsubst %.S,%.o,$(SRC:%.c=%.o))

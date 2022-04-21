@@ -100,6 +100,7 @@ int main()
 	pll_switch();
 	sdram_init();
 	nand_init();
+	lcd_init();
 
 	uart_puts("Ready.\r\n");
 	nand_print_id();
