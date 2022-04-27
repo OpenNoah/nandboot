@@ -94,17 +94,12 @@ void lcd_init(void)
 	lcd->LCDDA1 = kseg1_to_pa((void *)desc[1]);
 
 	// Initial image
-	for (unsigned i = 0; i < (config.lcd.vdisplay * config.lcd.hdisplay * bpp) / 4; i++)
-		buf[0][i] = 0x66ccff;
-	uint8_t *buf8 = (void *)buf[0];
-	for (unsigned x = 0; x < config.lcd.hdisplay; x++)
-		buf[0][x] = 0xff0000;
 	for (unsigned y = 0; y < config.lcd.vdisplay; y++)
-		buf[0][y * config.lcd.hdisplay] = 0x00ff00;
-	for (unsigned x = 0; x < config.lcd.hdisplay; x++)
-		buf[0][(config.lcd.vdisplay - 1) * config.lcd.hdisplay + x] = 0x0000ff;
-	for (unsigned y = 0; y < config.lcd.vdisplay; y++)
-		buf[0][y * config.lcd.hdisplay + (config.lcd.hdisplay - 1)] = 0xffff00;
+		for (unsigned x = 0; x < config.lcd.hdisplay; x++)
+			buf[0][y * config.lcd.hdisplay + x] =
+				((~x & 0xff) << 16) |
+				((y & 0xff) << 8) |
+				((x & 0xff) << 0);
 
 	// Enable LCD controller
 	lcd->LCDCTRL |= 1 << 3;

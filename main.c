@@ -8,8 +8,9 @@
 #include "nand.h"
 #include "keypad.h"
 #include "helper.h"
+#include "config.h"
 
-#define BUFFER_SIZE	(16 * 1024 * 1024)
+#define BUFFER_SIZE	(8 * 1024 * 1024)
 
 extern struct {
 	uint8_t nandtype;
