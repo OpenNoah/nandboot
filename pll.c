@@ -37,9 +37,12 @@ void pll_init(void)
 	cgu->CPCCR = (1 << 30) | (1 << 22) | (1 << 21) | ((ldiv - 1) << 16) |
 		     ((mdiv - 1) << 12) | ((pdiv - 1) << 8) |
 		     ((hdiv - 1) << 4) | ((cdiv - 1) << 0);
+	// LCD clock
 	cgu->LPCDR = DIV_CEIL(LCD_CLK_RATE,
 		((config.lcd.bus_format == MEDIA_BUS_FMT_RGB888_3X8) ? 3 : 1) *
 		config.lcd.clock * 1000 - 1);
+	// MSC clock
+	cgu->MSCCDR = DIV_CEIL(SYS_CLK_RATE, MMC_CLK_RATE) - 1;
 	// UHC clock at 48MHz
 	cgu->UHCCDR = (SYS_CLK_RATE / 48) - 1;
 }

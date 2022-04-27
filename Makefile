@@ -16,7 +16,7 @@ NM	:= $(CROSS)nm
 SIZE	:= $(CROSS)size
 OBJCOPY	:= $(CROSS)objcopy
 
-ARGS	= -mips1 -g -O3 -mno-abicalls -fno-pic -fno-pie -nostdlib
+ARGS	= -mips1 -g -Os -mno-abicalls -fno-pic -fno-pie -nostdlib -flto -ffreestanding
 DEFS	= -DVARIANT=0x$(VARIANT) -DVERSION=$(VERSION)
 CFLAGS	= $(ARGS) $(DEFS)
 ASFLAGS	= $(ARGS) $(DEFS)

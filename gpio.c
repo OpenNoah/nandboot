@@ -63,6 +63,13 @@ static gpio_t * const gpd = GPIOD_BASE;
 #error Unknown board variant
 #endif
 
+// MMC CD: PB27: Input
+#define GPIOB_PINS_MMC_CD	(1 << 27)
+// MMC Power: PC27: Output, active low
+#define GPIOC_PINS_MMC_POWER	(1 << 27)
+// MMC: PD8-PD13: AF0
+#define GPIOD_PINS_MMC_AF0	(0x00003f00)
+
 void gpio_init(void)
 {
 	gpa->FUN.S = GPIOA_PINS_MEMC;
@@ -77,22 +84,16 @@ void gpio_init(void)
 	gpc->SEL.S = GPIOC_PINS_NAND_BUSY;
 	gpc->SEL.C = GPIOC_PINS_MEMC | LCD_PC_AF0;
 	gpc->PE.S  = GPIOC_PINS_MEMC | LCD_PC_AF0;
-#if (LCD_PC_OUT0 | LCD_PC_OUT1) != 0
-	gpc->DIR.S = LCD_PC_OUT0 | LCD_PC_OUT1;
-#endif
-#if LCD_PC_OUT1 != 0
+	gpc->DIR.S = LCD_PC_OUT0 | LCD_PC_OUT1 | GPIOC_PINS_MMC_POWER;
 	gpc->DAT.S = LCD_PC_OUT1;
-#endif
+	gpc->DAT.C = GPIOC_PINS_MMC_POWER;
 
-	gpd->FUN.S = GPIO_PINS_UART0;
+	gpd->FUN.S = GPIO_PINS_UART0 | GPIOD_PINS_MMC_AF0;
 	gpd->SEL.S = GPIO_PINS_UART0;
+	gpd->PE.S  = GPIOD_PINS_MMC_AF0;
 	gpd->PE.C  = GPIO_PINS_UART0;
-#if (LCD_PD_OUT0 | LCD_PD_OUT1 | LCD_PD_PWM) != 0
 	gpd->DIR.S = LCD_PD_OUT0 | LCD_PD_OUT1 | LCD_PD_PWM;
-#endif
-#if LCD_PD_OUT1 != 0
 	gpd->DAT.S = LCD_PD_OUT1;
-#endif
 
 	gpio_lcd_enable(0);
 }

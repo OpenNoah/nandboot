@@ -27,6 +27,7 @@
 #define SYS_CLK_RATE	MHZ(336)
 #define SDRAM_CLK_RATE	(SYS_CLK_RATE / 3)	// Max. 133MHz
 #define LCD_CLK_RATE	(SYS_CLK_RATE / 3)	// Max. 150MHz
+#define MMC_CLK_RATE	MHZ(24)			// Max. 25MHz
 #define EXT_CLK_RATE	MHZ(12)
 #define BAUDRATE	115200
 
