@@ -88,7 +88,16 @@ static void mem_dump_nand(const char *line, void *buf)
 	nand_dump(buf, addr, len);
 }
 
-#define NAND_BANK	0xb8000000
+static void boot(void)
+{
+	// Load 2MB from next NAND block to SDRAM_LOAD_BASE
+	nand_load(config.nand.block, SDRAM_LOAD_BASE, 2 * 1024 * 1024);
+	uart_puts("Jumping to ");
+	uart_puthex((uint32_t)SDRAM_LOAD_BASE, 8);
+	uart_puts("...\r\n");
+	// Jump to SDRAM_LOAD_BASE
+	((void (*)(void))(SDRAM_LOAD_BASE))();
+}
 
 int main()
 {
@@ -105,6 +114,7 @@ int main()
 
 	uart_puts("Ready.\r\n");
 	nand_print_id();
+	boot();
 	buf = alloc(BUFFER_SIZE);
 
 	for (;;) {
@@ -125,6 +135,9 @@ int main()
 			break;
 		case 'f':
 			mem_fill_line(line);
+			break;
+		case 'b':
+			boot();
 			break;
 		case '*':
 			wdt_reset();

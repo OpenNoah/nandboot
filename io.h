@@ -19,4 +19,7 @@
 #define UART2_BASE	((void *)PA_TO_KSEG1(0x10032000))
 #define UART3_BASE	((void *)PA_TO_KSEG1(0x10033000))
 
+// 16MB before end of SDRAM
+#define SDRAM_LOAD_BASE	((void *)PA_TO_KSEG0(0x3000000))
+
 static _IO uint32_t *BCR = EMC_BASE;
