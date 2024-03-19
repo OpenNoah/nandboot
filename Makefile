@@ -8,7 +8,7 @@ SRC	+= keyboard_test.c
 
 OBJ	= $(patsubst %.S,%.o,$(SRC:%.c=%.o))
 
-CROSS	?= mipsel-linux-
+CROSS	?= mipsel-none-elf-
 AS	:= $(CROSS)gcc
 CC	:= $(CROSS)gcc
 CXX	:= $(CROSS)g++
@@ -17,12 +17,12 @@ NM	:= $(CROSS)nm
 SIZE	:= $(CROSS)size
 OBJCOPY	:= $(CROSS)objcopy
 
-ARGS	= -mips32 -g -Os -fno-pic -fno-pie -mno-abicalls -nostdlib -flto -ffreestanding
+ARGS	= -mips32 -g -Os -fno-pic -fno-pie -nostdlib -flto -ffreestanding
 ARGS	+= -Wall -Wextra -Wno-unused-variable -Wno-unused-const-variable -Wno-unused-function
 DEFS	= -DVARIANT=VARIANT_$(shell echo '$(VARIANT)' | tr '[:lower:]' '[:upper:]')
 CFLAGS	= -std=gnu17 $(ARGS) $(DEFS)
 ASFLAGS	= $(ARGS) $(DEFS)
-LDFLAGS	= $(ARGS) -Xlinker --gc-sections
+LDFLAGS	= $(ARGS) -Xlinker --gc-sections -G0
 
 .DELETE_ON_ERROR:
 
