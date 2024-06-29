@@ -277,3 +277,19 @@ void nand_read_pages(void *dst, uint32_t start, uint32_t count, int oob)
     uart_puthex(ecc_count.uncorrectable, 8);
     uart_puts("\r\n");
 }
+
+void nand_boot()
+{
+    // Read stage2 from NAND
+    const uint32_t stage2_size   = 0x00200000;
+    const uint32_t stage2_offset = 0x80200000;
+    nand_read_pages((void *)stage2_offset, 8192 / config.nand.page,
+                    0x00200000 / config.nand.page, 0);
+    // Logging
+    uart_puts(__func__);
+    uart_puts(": now booting\r\n");
+    // Flush dcache
+    //__dcache_writeback_all();
+    // Jump to offset 12
+    ((void(*)())(stage2_offset + 12))();
+}

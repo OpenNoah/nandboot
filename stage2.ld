@@ -2,7 +2,7 @@
 MEMORY
 {
   /* 2MiB at start of SDRAM space + 2MiB offset */
-  RAM(xrw):   ORIGIN = 0x80200000, LENGTH = 0x00400000 - 0x00200000
+  RAM(xrw):   ORIGIN = 0x80200000, LENGTH = 0x00200000
   /* Next 4MiB space for dynamic allocation */
   ALLOC(xrw): ORIGIN = ORIGIN(RAM) + LENGTH(RAM), LENGTH = 0x00400000
 }

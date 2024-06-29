@@ -71,9 +71,16 @@ typedef struct {
     unsigned int  size;
 } fw_args_t;
 
-extern char _header;
-static const fw_args_t *fw_args = (fw_args_t *)(&_header + 8);
-static volatile uint32_t *cr_args = (volatile uint32_t *)(&_header + 16);
+static const fw_args_t _fw_args = {
+	.cpu_id = 0x4755,
+	.ext_clk = 24,
+	.cpu_speed = 14,
+	.phm_div = 3,
+	.use_uart = 1,
+	.baudrate = 115200,
+    .is_busshare = 1,
+};
+static const fw_args_t *fw_args = &_fw_args;
 
 #define EXT_CLK_MHZ	    (fw_args->ext_clk)
 #define EXT_CLK_RATE	MHZ(fw_args->ext_clk)

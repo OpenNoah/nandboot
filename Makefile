@@ -27,7 +27,15 @@ LDFLAGS	= $(ARGS) -Xlinker --gc-sections -G0
 .DELETE_ON_ERROR:
 
 .PHONY: all
-all: stage1/$(NAME)_stage1.bin stage2/$(NAME)_stage2.bin
+all: nand.qcow2
+
+# Create qcow2 for qemu
+nand.qcow2: nand.bin
+	qemu-img convert -f raw -O qcow2 $< -c $@
+	qemu-img resize $@ $(shell echo $$((((4 * 1024 * 1024 * 1024) / 4096) * (4096 + 256))))
+
+nand.bin: nand_bin.py stage1/$(NAME)_stage1.bin stage2/$(NAME)_stage2.bin
+	./$^ -p 4096 -s 256 $@
 
 # Fill the backup section
 %.bin: %.elf

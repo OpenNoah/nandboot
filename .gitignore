@@ -1,6 +1,7 @@
 *.o
 *.elf
 *.bin
+*.qcow2
 bmImage
 upgrade*.bin
 .vscode*

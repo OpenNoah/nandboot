@@ -158,107 +158,29 @@ void print_arch()
 
 int main()
 {
-	static volatile int first_boot = 1;
-	if (first_boot) {
-		first_boot = 0;
-
-		uart_init();
-		uart_puts("\r\n*** usbboot stage2 JZ");
-		uart_puthex(fw_args->cpu_id, 4);
-		uart_puts(" ***\r\n");
-		print_arch();
-
-		lcd_init();
-
-		i2c_init();
-		i2c_scan();
-
-		stmpe2403_init();
-		uart_puts("STMPE2403 ID: 0x");
-		uart_puthex(stmpe2403_read_id(), 4);
-		uart_puts("\r\n");
-
-		nand_init();
-		nand_print_id();
-		return 0;
-	}
-
-	uart_puts("*** usbboot stage2 function 0x");
-	custom_cmd_op_t op = cr_args[0];
-	uint32_t arg = cr_args[1];
-	uart_puthex(op, 8);
-	uart_puts(", 0x");
-	uart_puthex(arg, 8);
+	uart_init();
+	uart_puts("\r\n*** nandboot stage2 JZ");
+	uart_puthex(fw_args->cpu_id, 4);
 	uart_puts(" ***\r\n");
+	print_arch();
 
-	switch (op) {
-	case CRNop:
-		break;
-	case CRShowImage:
-		lcd_show_bitmap((void *)arg);
-		break;
-	case CRStmpeGPIODir:
-		stmpe2403_gpio_dir(*(uint32_t *)arg);
-		break;
-	case CRStmpeGPIOOut:
-		stmpe2403_gpio_out(*(uint32_t *)arg);
-		// fall-through
-	case CRStmpeGPIOIn:
-		*(uint32_t *)arg = stmpe2403_gpio_in();
-		break;
-	case CRKeyboardTest:
-		keyboard_test();
-		break;
-	case CRNandReadPage:
-	case CRNandReadPageOob: {
-			uint32_t dst   = arg;
-			uint32_t start = ((uint32_t *)arg)[0];
-			uint32_t count = ((uint32_t *)arg)[1];
-			nand_read_pages((void *)dst, start, count, op == CRNandReadPageOob);
-		}
-		break;
-	default:
-		uart_puts("Unknown operation: ");
-		uart_putdec(op);
-		uart_puts("\r\n");
-	}
+	uart_puts("lcd_init()\n");
+	lcd_init();
 
-#if 0
+	uart_puts("i2c_init()\n");
+	i2c_init();
+	//i2c_scan();
 
-	uart_puts("Ready.\r\n");
+	uart_puts("stmpe2403_init()\n");
+	stmpe2403_init();
+	uart_puts("STMPE2403 ID: 0x");
+	uart_puthex(stmpe2403_read_id(), 4);
+	uart_puts("\r\n");
+
+	nand_init();
 	nand_print_id();
-	boot();
-	buf = alloc(BUFFER_SIZE);
 
-	for (;;) {
-		uart_puts("> ");
-		char *line = uart_get_line();
-		if (line[0] == 0)
-			continue;
+	keyboard_test();
 
-		switch (line[0]) {
-		case 'n':
-			mem_dump_nand(line, buf);
-			break;
-		case 'r':
-			mem_read_line(line);
-			break;
-		case 'w':
-			mem_write_line(line);
-			break;
-		case 'f':
-			mem_fill_line(line);
-			break;
-		case 'b':
-			boot();
-			break;
-		case '*':
-			wdt_reset();
-			break;
-		}
-	}
-
-	wdt_reset();
-#endif
 	return 0;
 }

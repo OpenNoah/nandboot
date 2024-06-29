@@ -7,34 +7,20 @@
 
     .section .header, "axR"
 _header:
-    b	_entry
-    nop
-    # Reserve some spaces for args
-    .word	0
-    .word	0
-    .word	0
-    .word	0
-    .word	0
-    .word	0
-    .word	0
-    # fw_args starts at offset 8
-    .word	0
-    .word	0
-    .word	0
-    .word	0
-    .word	0
-    .word	0
-    .word	0
-    .word	0
-    # custom command args starts at offset 16
-    .word	0
-    .word	0
-    .word	0
-    .word	0
-    .word	0
-    .word	0
-    .word	0
-    .word	0
+    .byte   0xff    # Bus width: 8-bit
+    .byte   0x55    # Check code
+    .byte   0x55
+    .byte   0x55
+    .byte   0x55
+    .byte   0x55
+    .byte   0x55
+    .byte   0x55
+    .byte   0xff    # Row address: 3 cycles
+    .byte   0xff    # Page size: 2/4 KiB
+    .byte   0x00    # Page size: 4 KiB
+    .byte   0x00    # Reserved, unused
+    b       _entry
+    nop                     # delay slot
     .size   _header, .-_header
 
     .section .text, "axR"

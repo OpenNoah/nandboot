@@ -2,7 +2,7 @@
 MEMORY
 {
   /* 16KiB of SRAM is available, but USB boot stage1 is typically loaded at 0x80002000 */
-  RAM(xrw):   ORIGIN = 0x80002000, LENGTH = 0x2000
+  RAM(xrw):   ORIGIN = 0x80000000, LENGTH = 0x2000
   /* SDRAM space for dynamic allocation, skip first 16k used by cache */
   ALLOC(xrw): ORIGIN = 0x80004000, LENGTH = 0x04000000 - 0x4000
 }

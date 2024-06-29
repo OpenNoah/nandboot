@@ -156,79 +156,23 @@ void print_arch()
 
 int main()
 {
-	static int first_boot = 1;
-	if (first_boot) {
-		first_boot = 0;
+	cgu_pll_init();
+	gpio_init();
 
-		cgu_pll_init();
-		gpio_init();
-
-		uart_init();
-		uart_puts("\r\n*** usbboot stage1 JZ");
-		uart_puthex(fw_args->cpu_id, 4);
-		uart_puts(" ***\r\n");
-		print_arch();
-
-		sdram_init();
-		lcd_init();
-
-		i2c_init();
-		i2c_scan();
-
-		nand_init();
-		nand_print_id();
-		return 0;
-	}
-
-	uart_puts("\r\n*** usbboot stage1 function 0x");
-	uint32_t op  = ((volatile uint32_t *)fw_args)[0];
-	uint32_t arg = ((volatile uint32_t *)fw_args)[1];
-	uart_puthex(op, 8);
-	uart_puts(", 0x");
-	uart_puthex(arg, 8);
+	uart_init();
+	uart_puts("\r\n*** nandboot stage1 JZ");
+	uart_puthex(fw_args->cpu_id, 4);
 	uart_puts(" ***\r\n");
+	print_arch();
 
-	if (op == 1) {
-		// Show image
-		lcd_show_bitmap((void *)arg);
-	}
+	uart_puts("sdram_init()\n");
+	sdram_init();
+	uart_puts("lcd_init()\n");
+	lcd_init();
 
-#if 0
-
-	uart_puts("Ready.\r\n");
+	nand_init();
 	nand_print_id();
-	boot();
-	buf = alloc(BUFFER_SIZE);
+	nand_boot();
 
-	for (;;) {
-		uart_puts("> ");
-		char *line = uart_get_line();
-		if (line[0] == 0)
-			continue;
-
-		switch (line[0]) {
-		case 'n':
-			mem_dump_nand(line, buf);
-			break;
-		case 'r':
-			mem_read_line(line);
-			break;
-		case 'w':
-			mem_write_line(line);
-			break;
-		case 'f':
-			mem_fill_line(line);
-			break;
-		case 'b':
-			boot();
-			break;
-		case '*':
-			wdt_reset();
-			break;
-		}
-	}
-
-	wdt_reset();
-#endif
 	return 0;
 }
