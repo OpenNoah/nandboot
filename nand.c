@@ -80,6 +80,11 @@ void nand_init()
     *NAND_CMD_PORT(bank) = 0xff;
     gpio_nand_busy_wait();
 
+#if JZ4740
+    row_cycles = 3;
+    page_size = 4096;
+    oob_size = 128;
+#else
     // Read the first 12 bytes
     uint8_t header[12];
     gpio_nand_busy_catch();
@@ -99,6 +104,7 @@ void nand_init()
     row_cycles = header[8] == 0 ? 2 : 3;
     page_size = header[9] == 0 ? 512 : header[10] == 0 ? 4096 : 2048;
     oob_size = 16 * page_size / 512;
+#endif
 }
 
 void nand_print_id()
@@ -150,8 +156,8 @@ void nand_boot()
     uart_puts(": now booting\r\n");
     // Flush dcache
     __dcache_writeback_all();
-    // Jump to offset 12
-    ((void(*)())0x8000000c)();
+    // Jump to offset 4
+    ((void(*)())0x80000004)();
 }
 
 void nand_read_pages(void *dst, uint32_t start, uint32_t count, int oob)
@@ -183,55 +189,6 @@ void nand_read_pages(void *dst, uint32_t start, uint32_t count, int oob)
         uint32_t oob_data[(oob_size + 3) / 4];
         for (unsigned i = 0; i < oob_size / 4; i++)
             oob_data[i] = *NAND_DATA_PORT_32(bank);
-
-        // D88 uses BCH hardware ECC
-        uint32_t ecc_ofs = 3;
-        for (unsigned block = 0; block < page_size / 512; block++) {
-            // BCH ECC decoding sequence
-            // 1 Set BHCR.BCHE to 1 to enable BCH controller.
-            // 2 Select 4-bit or 8-bit correction by setting BHCR.BSEL.
-            // 3 Clear BHCR.ENCE to 0 to enable decoding.
-            bch->BHCCR = BIT(3);
-            // 4 Set BHCR.BRST to 1 to reset BCH controller.
-            bch->BHCSR = BIT(2) | BIT(1) | BIT(0);
-            // 5 Set BHCNT.DEC_COUNT to data block size in bytes.
-            bch->BHCNT = (512 + 13) << 16;
-            // Clear error flags
-            bch->BHINT = 0xff;
-            // 6 Byte-write all data block to BHDR.
-            for (unsigned i = 0; i < 512; i++)
-                bch->BHDR = ((uint8_t *)&page_data[0])[block * 512 + i];
-            for (unsigned i = 0; i < 13; i++)
-                bch->BHDR = ((uint8_t *)&oob_data[0])[ecc_ofs + block * 13 + i];
-            // 7 Check BHINTS.DECF bit or by enabling decoding finish interrupt.
-            while (!(bch->BHINT & BIT(3)));
-            // 8 When decoding finishes, read out the status in BHINT and error report in BHERRn.
-            uint32_t status = bch->BHINT;
-            if (status & BIT(0)) {
-                // Error occured
-                uart_puts("BCH ECC error @ page 0x");
-                uart_puthex(start, 8);
-                uart_puts(" block ");
-                uart_puthex(block, 1);
-                uart_puts(": ");
-                if (status & BIT(1)) {
-                    // Uncorrectable error occured
-                    uart_puts("Uncorrectable\r\n");
-                } else {
-                    uint32_t err_bits = status >> 28;
-                    uart_puthex(err_bits, 1);
-                    uart_puts(" errors corrected\r\n");
-                    while (err_bits--) {
-                        uint16_t bit = (bch->BHERR[err_bits / 2] >> (16 * (err_bits % 2))) - 1;
-                        if (bit < 512 * 8) {
-                            // Error is in page data, need to correct
-                            bit += block * 512 * 8;
-                            ((uint8_t *)&page_data[0])[bit / 8] ^= 1 << (bit % 8);
-                        }
-                    }
-                }
-            }
-        }
 
         for (unsigned i = 0; i < page_size / 4; i++)
             *buf32++ = page_data[i];

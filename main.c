@@ -7,11 +7,11 @@
 #include "cp0.h"
 
 static fw_args_t _fw_args = {
-	.cpu_id = 0x4755,
-	.ext_clk = 24,
-	.cpu_speed = 14,
+	.cpu_id = 0x4740,
+	.ext_clk = 12,
+	.cpu_speed = 28,
 	.phm_div = 3,
-	.use_uart = 1,
+	.use_uart = 0,
 	.baudrate = 115200,
 };
 

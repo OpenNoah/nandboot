@@ -71,7 +71,21 @@ static struct cgu_t * const cgu = CGU_BASE;
 void cgu_pll_init(void)
 {
 #if JZ4740
-#error TODO
+    // Configure PLL
+    const unsigned long n = 2;
+    const unsigned long m = DIV_CEIL(SYS_CLK_RATE, EXT_CLK_RATE / n);
+    // M, N, OD, bypass, enabled, stablise time = 3
+    cgu->CPPCR = ((m - 2) << 23) | ((n - 2) << 18) | (0 << 16) |
+             (1 << 9) | (1 << 8) | (3 << 0);
+    // System clock dividers
+    const unsigned long cdiv = 1;
+    const unsigned long mdiv = 3;   //fw_args->phm_div + 1;
+    const unsigned long hdiv = mdiv;
+    const unsigned long pdiv = mdiv;
+    const unsigned long ldiv = 0b0010;  // div by 3
+    cgu->CPCCR = (1 << 30) | (1 << 22) | (1 << 21) | ((ldiv - 1) << 16) |
+             ((mdiv - 1) << 12) | ((pdiv - 1) << 8) |
+             ((hdiv - 1) << 4) | ((cdiv - 1) << 0);
 #elif JZ4755
     // Switch everything to EXTCLK first to reconfigure PLL
     cgu->CPPCR = 0;
@@ -83,7 +97,7 @@ void cgu_pll_init(void)
     cgu->CPPCR = ((m - 2) << 23) | ((n - 2) << 18) | (0 << 16) |
             (1 << 9) | (1 << 8) | (0x11 << 0);
     // System clock dividers
-    const unsigned long udiv = 28;	// UDC freq should be 12MHz
+    const unsigned long udiv = 28;    // UDC freq should be 12MHz
     const unsigned long cdiv = 1;
     const unsigned long mdiv = 3; //fw_args->phm_div + 1;
     const unsigned long h0div = mdiv;

@@ -17,7 +17,7 @@ OBJCOPY	:= $(CROSS)objcopy
 ARGS	= -mips32 -g -Os -fno-pic -fno-pie -flto -ffreestanding
 ARGS	+= -nostdlib -nostartfiles -specs=nosys.specs
 ARGS	+= -Wall -Wextra -Wno-unused-variable -Wno-unused-const-variable -Wno-unused-function
-DEFS	= -DJZ4755=1
+DEFS	= -DJZ4740=1
 CFLAGS	= -std=gnu17 $(ARGS) $(DEFS)
 ASFLAGS	= $(ARGS) $(DEFS)
 LDFLAGS	= $(ARGS) -Xlinker --gc-sections -G0
