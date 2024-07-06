@@ -81,9 +81,9 @@ void nand_init()
     gpio_nand_busy_wait();
 
 #if JZ4740
-    row_cycles = 3;
-    page_size = 4096;
-    oob_size = 128;
+    row_cycles = 2;
+    page_size  = 2048;
+    oob_size   = 64;
 #else
     // Read the first 12 bytes
     uint8_t header[12];
@@ -129,22 +129,22 @@ void nand_print_id()
 
 #define Index_Writeback_Inv_D   0x01
 
-#define cache_op(op,addr)						\
-	__asm__ __volatile__(						\
-	"	.set	noreorder		\n"			\
-	"	.set	mips32\n\t		\n"			\
-	"	cache	%0, %1			\n"			\
-	"	.set	mips0			\n"			\
-	"	.set	reorder"					\
-	:										\
-	: "i" (op), "m" (*(unsigned char *)(addr)))
+#define cache_op(op,addr)      \
+    __asm__ __volatile__(      \
+    "    .set    noreorder \n" \
+    "    .set    mips32\n\t\n" \
+    "    cache    %0, %1   \n" \
+    "    .set    mips0     \n" \
+    "    .set    reorder"      \
+    :                          \
+    : "i" (op), "m" (*(unsigned char *)(addr)))
 
 void __dcache_writeback_all()
 {
-	uint32_t i;
-	for (i=KSEG0;i<KSEG0+CACHE_SIZE;i+=CACHE_LINE_SIZE)
-		cache_op(Index_Writeback_Inv_D, i);
-	SYNC_WB();
+    uint32_t i;
+    for (i=KSEG0;i<KSEG0+CACHE_SIZE;i+=CACHE_LINE_SIZE)
+        cache_op(Index_Writeback_Inv_D, i);
+    SYNC_WB();
 }
 
 void nand_boot()
@@ -177,8 +177,10 @@ void nand_read_pages(void *dst, uint32_t start, uint32_t count, int oob)
         *NAND_ADDR_PORT(bank) = (0 >> 0) & 0xff;
         *NAND_ADDR_PORT(bank) = (0 >> 8) & 0xff;
         *NAND_ADDR_PORT(bank) = (start >>  0) & 0xff;
-        *NAND_ADDR_PORT(bank) = (start >>  8) & 0xff;
-        *NAND_ADDR_PORT(bank) = (start >> 16) & 0xff;
+        if (row_cycles >= 2)
+            *NAND_ADDR_PORT(bank) = (start >>  8) & 0xff;
+        if (row_cycles >= 3)
+            *NAND_ADDR_PORT(bank) = (start >> 16) & 0xff;
         *NAND_CMD_PORT(bank) = 0x30;
         gpio_nand_busy_wait();
 
